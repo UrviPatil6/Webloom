@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  indexer:
+    build: .
+    container_name: page-link-indexer
+    ports:
+      - "${PORT:-3100}:3100"
+    environment:
+      - SITE_URL=${SITE_URL}
+      - SITEMAP_URL=${SITEMAP_URL}
+      - GOOGLE_SERVICE_ACCOUNT_KEY_FILE=${GOOGLE_SERVICE_ACCOUNT_KEY_FILE}
+      - INDEXNOW_KEY=${INDEXNOW_KEY}
+      - API_KEY=${API_KEY}
+      - ENABLE_SITEMAP_MONITOR=${ENABLE_SITEMAP_MONITOR:-false}
+    volumes:
+      - indexer-data:/app/data
+      - indexer-logs:/app/logs
+      - ./google-service-account.json:/app/google-service-account.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3100/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  indexer-data:
+  indexer-logs:

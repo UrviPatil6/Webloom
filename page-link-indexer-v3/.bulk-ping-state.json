@@ -1,0 +1,73 @@
+{
+  "dayKey": "2026-02-11",
+  "global": {
+    "dayCount": 17
+  },
+  "endpoints": {
+    "https://pingomatic.com/ping/?url=": {
+      "dayCount": 1,
+      "successCount": 4,
+      "failCount": 0,
+      "consecFails": 0,
+      "cooldownUntilMs": 0,
+      "lastPingAtMs": 1770795085315,
+      "day": "2026-02-13",
+      "lastUsedAt": 1770988504031,
+      "failTotal": 1,
+      "consecutiveFail": 0,
+      "lastError": null,
+      "cooldownUntil": 0,
+      "successTotal": 1,
+      "lastStatus": 200
+    },
+    "https://webmaster.yandex.ru/ping?sitemap=": {
+      "dayCount": 3,
+      "successCount": 4,
+      "failCount": 0,
+      "consecFails": 0,
+      "cooldownUntilMs": 0,
+      "lastPingAtMs": 1770795115823,
+      "day": "2026-02-13",
+      "lastUsedAt": 1770988438253,
+      "successTotal": 4,
+      "consecutiveFail": 0,
+      "lastStatus": 200,
+      "lastError": null,
+      "cooldownUntil": 0
+    },
+    "https://webmaster.yandex.com/ping?sitemap=": {
+      "dayCount": 1,
+      "successCount": 5,
+      "failCount": 0,
+      "consecFails": 0,
+      "cooldownUntilMs": 0,
+      "lastPingAtMs": 1770795178208,
+      "day": "2026-02-13",
+      "lastUsedAt": 1770988488939,
+      "successTotal": 2,
+      "consecutiveFail": 0,
+      "lastError": null,
+      "failTotal": 1,
+      "cooldownUntil": 0,
+      "lastStatus": 200
+    },
+    "http://www.pingoat.net/ping.php?url=": {
+      "dayCount": 5,
+      "successCount": 4,
+      "failCount": 0,
+      "consecFails": 0,
+      "cooldownUntilMs": 0,
+      "lastPingAtMs": 1770795150793,
+      "day": "2026-02-13",
+      "lastUsedAt": 1770988419702,
+      "successTotal": 6,
+      "consecutiveFail": 0,
+      "lastStatus": 200,
+      "lastError": null,
+      "cooldownUntil": 0
+    }
+  },
+  "version": 1,
+  "day": "2026-02-13",
+  "totalDayCount": 10
+}

@@ -1,0 +1,2523 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Link Indexer v3.1 — Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --border-h: #cbd5e1;
+      --text: #1e293b;
+      --text-2: #475569;
+      --text-3: #64748b;
+      --accent: #0891b2;
+      --accent-2: #4f46e5;
+      --green: #059669;
+      --red: #dc2626;
+      --amber: #d97706;
+      --radius: 14px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Instrument Sans', system-ui, sans-serif;
+      background: #ffffff;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ═══ Layout — full width ═══ */
+    .shell {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      padding: 28px 32px 60px;
+      min-height: calc(100vh - 0px);
+    }
+
+    /* ═══ Dashboard with Sidebar ═══ */
+    .dashboard-wrap {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+      background: #ffffff;
+    }
+
+    .dashboard-sidebar {
+      width: 260px;
+      min-width: 260px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 12px rgba(0, 0, 0, .04);
+    }
+
+    .dashboard-sidebar .logo-wrap {
+      padding: 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dashboard-sidebar .logo {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .dashboard-sidebar .nav-links {
+      flex: 1;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .dashboard-sidebar .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-3);
+      text-decoration: none;
+      transition: all .2s;
+      border-left: 3px solid transparent;
+    }
+
+    .dashboard-sidebar .nav-link:hover {
+      color: var(--text);
+      background: rgba(0, 0, 0, .05);
+    }
+
+    .dashboard-sidebar .nav-link.active {
+      color: var(--accent-2);
+      background: rgba(79, 70, 229, .08);
+      border-left-color: var(--accent-2);
+    }
+
+    .dashboard-sidebar .nav-link .nav-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .dashboard-main {
+      flex: 1;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: #ffffff;
+      min-height: 100vh;
+    }
+
+    .dashboard-view {
+      display: none;
+    }
+
+    .dashboard-view.active {
+      display: block;
+    }
+
+    /* ═══ Header ═══ */
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .header .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(8, 145, 178, .1);
+      border: 1px solid rgba(8, 145, 178, .25);
+      border-radius: 100px;
+      padding: 5px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: .6px;
+      margin-bottom: 14px;
+    }
+
+    .header h1 {
+      font-size: clamp(32px, 5vw, 46px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -1.5px;
+      background: linear-gradient(135deg, var(--accent) 10%, var(--accent-2) 55%, var(--green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header .sub {
+      color: var(--text-3);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    /* ═══ Health Strip ═══ */
+    .health-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .health-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: var(--text-3);
+    }
+
+    .health-chip .led {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .led-on {
+      background: var(--green);
+      box-shadow: 0 0 5px var(--green);
+    }
+
+    .led-warn {
+      background: var(--amber);
+      box-shadow: 0 0 5px var(--amber);
+    }
+
+    .led-off {
+      background: var(--text-3);
+    }
+
+    /* ═══ Card ═══ */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-head h2 {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    /* ═══ Tabs ═══ */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 13px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: none;
+      color: var(--text-3);
+      border: none;
+      border-bottom: 2px solid transparent;
+      font-family: inherit;
+      transition: all .2s;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-2);
+    }
+
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: rgba(8, 145, 178, .06);
+    }
+
+    /* ═══ Textarea ═══ */
+    .url-area {
+      width: 100%;
+      min-height: 170px;
+      background: #f8fafc;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      line-height: 1.8;
+      color: var(--text);
+      resize: vertical;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .url-area:focus {
+      border-color: rgba(8, 145, 178, .5);
+    }
+
+    .url-area::placeholder {
+      color: var(--text-3);
+      opacity: .8;
+    }
+
+    .url-area.drag-active {
+      border-color: var(--accent);
+      background: rgba(8, 145, 178, .04);
+    }
+
+    /* ═══ Upload Zone ═══ */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      padding: 44px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: #f8fafc;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-active {
+      border-color: var(--accent);
+      background: rgba(8, 145, 178, .04);
+    }
+
+    .upload-zone .icon-ring {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: rgba(8, 145, 178, .1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .upload-zone h3 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .upload-zone p {
+      font-size: 12.5px;
+      color: var(--text-3);
+      line-height: 1.5;
+    }
+
+    .upload-zone .formats {
+      margin-top: 6px;
+    }
+
+    .upload-zone .fmt-tag {
+      display: inline-block;
+      background: rgba(5, 150, 105, .12);
+      color: var(--green);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 2px;
+    }
+
+    .file-loaded {
+      margin-top: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(5, 150, 105, .12);
+      border: 1px solid rgba(5, 150, 105, .3);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 12px;
+      color: var(--green);
+      font-weight: 500;
+    }
+
+    /* ═══ URL Preview ═══ */
+    .url-preview {
+      margin-top: 14px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .url-preview-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, .98);
+      z-index: 2;
+      backdrop-filter: blur(6px);
+    }
+
+    .url-preview-head span {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .url-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11.5px;
+    }
+
+    .url-row:hover {
+      background: rgba(0, 0, 0, .03);
+    }
+
+    .url-row .num {
+      color: var(--text-3);
+      width: 22px;
+      text-align: right;
+      flex-shrink: 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+    }
+
+    .url-row .link {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+    }
+
+    .url-row .del {
+      background: none;
+      border: none;
+      color: var(--text-3);
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .url-row:hover .del {
+      opacity: 1;
+    }
+
+    /* ═══ Meta Row ═══ */
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .url-count {
+      font-size: 12px;
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .url-count strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .clear-btn {
+      font-family: inherit;
+      font-size: 11.5px;
+      color: var(--text-3);
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .clear-btn:hover {
+      color: var(--red);
+    }
+
+    .site-delete-btn {
+      width: 20px;
+      height: 20px;
+      padding: 0;
+      border: none;
+      border-radius: 6px;
+      background: rgba(148, 163, 184, .2);
+      color: var(--text-3);
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .site-delete-btn:hover {
+      background: rgba(220, 38, 38, .15);
+      color: var(--red);
+    }
+
+    /* ═══ Buttons ═══ */
+    .btn-main {
+      width: 100%;
+      padding: 15px 24px;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      transition: all .18s;
+      letter-spacing: -.2px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 60%, var(--green) 100%);
+      color: #000;
+    }
+
+    .btn-main:hover:not(:disabled) {
+      opacity: .92;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(8, 145, 178, .2);
+    }
+
+    .btn-main:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-main.loading {
+      background: var(--surface);
+      color: var(--text-3);
+      border: 1px solid var(--border);
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      margin-top: 10px;
+    }
+
+    .svc-btn {
+      padding: 9px 6px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--text-2);
+      font-size: 11.5px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all .15s;
+    }
+
+    .svc-btn:hover {
+      border-color: var(--border-h);
+      color: var(--text);
+      background: #f1f5f9;
+    }
+
+    .svc-btn:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    /* ═══ Results ═══ */
+    .results-panel {
+      animation: fadeUp .3s ease;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .summary-cell {
+      padding: 13px 12px;
+      text-align: center;
+      background: var(--card);
+    }
+
+    .summary-cell .val {
+      font-size: 22px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .summary-cell .lbl {
+      font-size: 10.5px;
+      color: var(--text-3);
+      margin-top: 2px;
+    }
+
+    .svc-result-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 12.5px;
+    }
+
+    .svc-result-row .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .svc-result-row .name {
+      flex: 1;
+      font-weight: 500;
+    }
+
+    .svc-result-row .stat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+    }
+
+    /* ═══ Quick Actions ═══ */
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      margin-top: 16px;
+    }
+
+    .quick-btn {
+      padding: 13px 10px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-2);
+      font-size: 12px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      transition: all .2s;
+    }
+
+    .quick-btn:hover {
+      border-color: var(--border-h);
+      background: #f1f5f9;
+      color: var(--text);
+    }
+
+    .quick-btn .q-icon {
+      font-size: 18px;
+    }
+
+    /* ═══ Strategy Reference ═══ */
+    .strat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .strat-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 13px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+
+    .strat-item .emoji {
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .strat-item .s-name {
+      font-size: 12.5px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    .strat-item .speed-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+    }
+
+    /* ═══ Toast ═══ */
+    .toast {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 9999;
+      padding: 11px 18px;
+      border-radius: 11px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      animation: slideIn .3s ease;
+      backdrop-filter: blur(12px);
+      max-width: 420px;
+    }
+
+    .toast-ok {
+      background: rgba(5, 150, 105, .12);
+      border: 1px solid rgba(5, 150, 105, .3);
+      color: var(--green);
+    }
+
+    .toast-err {
+      background: rgba(220, 38, 38, .1);
+      border: 1px solid rgba(220, 38, 38, .25);
+      color: var(--red);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(20px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0)
+      }
+    }
+
+    /* ═══ Spinner ═══ */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+
+    .spinner-light {
+      border-color: var(--border);
+      border-top-color: var(--accent);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* ═══ Inspector ═══ */
+    .inspect-input {
+      flex: 1;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 9px 13px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--text);
+      outline: none;
+    }
+
+    .inspect-input:focus {
+      border-color: rgba(79, 70, 229, .4);
+    }
+
+    .inspect-btn {
+      padding: 9px 16px;
+      background: rgba(79, 70, 229, .1);
+      border: 1px solid rgba(79, 70, 229, .25);
+      border-radius: 9px;
+      color: var(--accent-2);
+      font-size: 12.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .inspect-result {
+      margin-top: 10px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 20px;
+    }
+
+    .ir-cell {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+    }
+
+    .ir-cell .ir-lbl {
+      color: var(--text-3);
+    }
+
+    .ir-cell .ir-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      font-size: 11px;
+    }
+
+    /* ═══ Footer ═══ */
+    .footer {
+      text-align: center;
+      margin-top: 32px;
+      font-size: 11.5px;
+      color: var(--text-3);
+    }
+
+    /* ═══ Responsive ═══ */
+    @media (max-width: 900px) {
+      .dashboard-wrap {
+        flex-direction: column;
+      }
+
+      .dashboard-sidebar {
+        width: 100%;
+        min-width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .dashboard-sidebar .logo-wrap {
+        border-bottom: none;
+        padding: 16px 20px;
+      }
+
+      .dashboard-sidebar .nav-links {
+        flex-direction: row;
+        flex: 1;
+        padding: 12px;
+        gap: 8px;
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 640px) {
+
+      .service-grid,
+      .quick-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .strat-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard-sidebar .nav-link .nav-icon {
+        display: none;
+      }
+    }
+
+    /* ═══ Scrollbar ═══ */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-h);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f8fafc;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="toastBox"></div>
+  <div class="dashboard-wrap">
+    <aside class="dashboard-sidebar">
+      <div class="logo-wrap">
+        <a href="#/" class="logo">Page Link Indexer</a>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="nav-link" id="navIndex">
+          <span class="nav-icon">⚡</span> Submit URLs
+        </a>
+        <a href="/inspect" class="nav-link" id="navInspect">
+          <span class="nav-icon">🔍</span> URL Inspector
+        </a>
+        <a href="/bulk" class="nav-link" id="navBulk">
+          <span class="nav-icon">📊</span> Bulk Status
+        </a>
+        <a href="/bulk-ping" class="nav-link" id="navBulkPing">
+          <span class="nav-icon">📣</span> Bulk Ping
+        </a>
+        <a href="/sites" class="nav-link" id="navSites">
+          <span class="nav-icon">🔗</span> Saved Sites
+        </a>
+        <a href="/socials" class="nav-link" id="navSocials">
+          <span class="nav-icon">📱</span> Social Indexing
+        </a>
+      </nav>
+    </aside>
+    <main class="dashboard-main">
+      <div class="shell">
+        <!-- ═══ VIEW: Submit / Index ═══ -->
+        <div id="viewIndex" class="dashboard-view active">
+          <div class="header">
+            <h1>Submit URLs</h1>
+            <p class="sub">Paste or upload URLs and send to all indexing services.</p>
+          </div>
+          <div class="view-health-strip health-strip" id="healthStripIndex">
+            <div class="health-chip">
+              <div class="led led-off"></div>Loading…
+            </div>
+          </div>
+          <!-- MAIN INPUT CARD -->
+          <div class="card">
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="paste" onclick="switchTab('paste')">
+                📋 Paste URLs
+              </button>
+              <button class="tab-btn" data-tab="upload" onclick="switchTab('upload')">
+                📁 Upload Excel / CSV
+              </button>
+            </div>
+
+            <div class="card-body">
+              <!-- Paste Panel -->
+              <div id="panelPaste">
+                <textarea class="url-area" id="urlInput"
+                  placeholder="Paste URLs here — one per line&#10;&#10;https://yoursite.com/blog/new-post&#10;https://yoursite.com/products/launch&#10;https://yoursite.com/about&#10;&#10;Also supports: comma-separated, drag-and-drop .xlsx/.csv files"
+                  oninput="parseTextInput()"></textarea>
+              </div>
+
+              <!-- Upload Panel -->
+              <div id="panelUpload" style="display:none;">
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+                  <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt,.tsv" style="display:none"
+                    onchange="handleFileSelect(event)">
+                  <div class="icon-ring">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      style="color:var(--accent)">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  </div>
+                  <h3>Drop your file here or click to browse</h3>
+                  <p>Auto-detects URLs from any column in your spreadsheet</p>
+                  <div class="formats">
+                    <span class="fmt-tag">.xlsx</span>
+                    <span class="fmt-tag">.xls</span>
+                    <span class="fmt-tag">.csv</span>
+                    <span class="fmt-tag">.txt</span>
+                    <span class="fmt-tag">.tsv</span>
+                  </div>
+                  <div id="fileLoaded" class="file-loaded" style="display:none;"></div>
+                </div>
+              </div>
+
+              <!-- URL Preview -->
+              <div id="urlPreview" class="url-preview" style="display:none;"></div>
+
+              <!-- Meta Row -->
+              <div class="meta-row" id="metaRow" style="display:none;">
+                <div class="url-count">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  <strong id="urlCountNum">0</strong> <span>URLs detected</span>
+                  <span id="fromFile" style="color:var(--text-3);display:none;"> · from <span
+                      id="fileName"></span></span>
+                </div>
+                <button class="clear-btn" onclick="clearAll()">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                  Clear all
+                </button>
+              </div>
+
+              <!-- Submit Buttons -->
+              <button class="btn-main" id="btnMain" onclick="submitAll()" disabled>
+                ⚡ Submit to All 8 Services
+              </button>
+              <button class="btn-main"
+                style="margin-top:10px;background:linear-gradient(135deg,#e0f2fe,#e0e7ff);color:var(--text);"
+                onclick="submitExternal()" id="btnExternal" disabled>
+                🌐 Ping External (Medium / Social)
+              </button>
+              <button class="btn-main"
+                style="margin-top:10px;background:linear-gradient(135deg,#fef3c7,#fee2e2);color:var(--text);font-size:13px;"
+                onclick="submitFeedburner()" id="btnFeedburner" disabled>
+                🔁 Ping Feedburner Feeds (paste feed URLs)
+              </button>
+
+              <div class="service-grid">
+                <button class="svc-btn" onclick="submitTo(['google'])" id="svcGoogle" disabled>🔍 Google</button>
+                <button class="svc-btn" onclick="submitTo(['indexnow'])" id="svcIndex" disabled>⚡ IndexNow</button>
+                <button class="svc-btn" onclick="submitTo(['bing_webmaster'])" id="svcBing" disabled>🅱️ Bing
+                  WM</button>
+                <button class="svc-btn" onclick="submitTo(['google','indexnow','bing_webmaster'])" id="svcTop3"
+                  disabled>🎯 Top 3</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ RESULTS ═══ -->
+          <div id="resultsPanel" class="card results-panel" style="display:none;">
+            <div class="card-head">
+              <h2>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                  <path d="M18 20V10" />
+                  <path d="M12 20V4" />
+                  <path d="M6 20v-6" />
+                </svg>
+                Submission Results
+              </h2>
+              <div style="display:flex;gap:7px;">
+                <button class="clear-btn" onclick="copyResults()" style="font-size:11px;">📋 Copy JSON</button>
+                <button class="clear-btn" onclick="document.getElementById('resultsPanel').style.display='none'"
+                  style="font-size:16px;">×</button>
+              </div>
+            </div>
+            <div class="summary-grid" id="summaryGrid"></div>
+            <div class="card-body" id="svcResults" style="padding-top:8px;"></div>
+          </div>
+
+          <!-- Quick Actions (Index view) -->
+          <div class="quick-grid">
+            <button class="quick-btn" onclick="quickAction('/api/sitemap/ping','Sitemap Ping sent!')">
+              <span class="q-icon">🌐</span> Sitemap Ping
+            </button>
+            <button class="quick-btn" onclick="quickAction('/api/sitemap/resubmit','GSC Sitemap resubmitted!')">
+              <span class="q-icon">🔄</span> GSC Resubmit
+            </button>
+            <button class="quick-btn" onclick="quickAction('/api/index/websub','WebSub hubs notified!')">
+              <span class="q-icon">📢</span> WebSub Push
+            </button>
+            <button class="quick-btn" onclick="quickAction('/api/index/rss-ping','RSS ping sent to 5 services!')">
+              <span class="q-icon">📡</span> RSS Ping
+            </button>
+          </div>
+        </div>
+        <!-- END VIEW: Index -->
+
+        <!-- ═══ VIEW: URL Inspector ═══ -->
+        <div id="viewInspect" class="dashboard-view">
+          <div class="header">
+            <h1>URL Inspector</h1>
+            <p class="sub">Check if a specific URL is indexed in Google, using the correct Saved Site automatically.</p>
+          </div>
+          <div class="view-health-strip health-strip" id="healthStripInspect">
+            <div class="health-chip">
+              <div class="led led-off"></div>Loading…
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head">
+              <h2>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                URL Inspector
+              </h2>
+              <span style="font-size:11px;color:var(--text-3);">Check Google indexing status for any URL</span>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;gap:8px;">
+                <input class="inspect-input" id="inspectInput" placeholder="https://yoursite.com/page-to-check"
+                  onkeydown="if(event.key==='Enter')doInspect()">
+                <button class="inspect-btn" onclick="doInspect()" id="btnInspect">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  Inspect
+                </button>
+              </div>
+              <div id="inspectResult"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ VIEW: Bulk Status ═══ -->
+        <div id="viewBulk" class="dashboard-view">
+          <div class="header">
+            <h1>Bulk URL Status</h1>
+            <p class="sub">Upload a file and check Google indexing status for many URLs at once.</p>
+          </div>
+          <div class="view-health-strip health-strip" id="healthStripBulk">
+            <div class="health-chip">
+              <div class="led led-off"></div>Loading…
+            </div>
+          </div>
+          <!-- ═══ BULK URL STATUS ═══ -->
+          <div class="card">
+            <div class="card-head">
+              <h2>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <path d="M9 3v18" />
+                  <path d="M3 9h18" />
+                </svg>
+                Bulk URL Status (Google)
+              </h2>
+              <span style="font-size:11px;color:var(--text-3);">Upload URLs and check indexing in one go</span>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px;">
+                <input type="file" id="bulkFileInput" accept=".xlsx,.xls,.csv,.txt" onchange="handleBulkFile(event)" />
+                <span id="bulkCount" style="font-size:12px;color:var(--text-3);">No file selected</span>
+                <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:4px;user-select:none;">
+                  <input type="checkbox" id="bulkUseSerpScraper" style="transform:translateY(1px);">
+                  <span style="font-size:12px;color:var(--text-2);">Use SERP check (Scraper API) for external
+                    URLs</span>
+                </label>
+                <button class="inspect-btn" style="margin-left:auto;" onclick="runBulkInspect()" id="btnBulkInspect">
+                  <span>Run Bulk Check</span>
+                </button>
+              </div>
+              <div id="bulkModeHint" style="margin-top:-4px;margin-bottom:6px;font-size:11px;color:var(--text-3);">
+                Default mode uses Google Search Console URL Inspection (owned sites only). Enable SERP mode to check
+                external domains (costs requests).
+              </div>
+              <div id="bulkResults" style="margin-top:10px; max-height:260px; overflow:auto; font-size:11.5px;"></div>
+              <div id="bulkActions" style="margin-top:10px; display:none; gap:8px;">
+                <button class="clear-btn" onclick="downloadBulk('xlsx')" style="font-size:11px;">⬇ Download
+                  Excel</button>
+                <button class="clear-btn" onclick="downloadBulk('csv')" style="font-size:11px;">⬇ Download CSV</button>
+                <button class="clear-btn" onclick="copyFailedBulkUrls()" style="font-size:11px;">📋 Copy failed
+                  URLs</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END VIEW: Bulk -->
+
+        <!-- ═══ VIEW: Bulk Ping (External) ═══ -->
+        <div id="viewBulkPing" class="dashboard-view">
+          <div class="header">
+            <h1>Bulk Ping</h1>
+            <p class="sub">Paste external URLs (Medium / social) and run bulk pings with randomized pacing.</p>
+          </div>
+          <div class="view-health-strip health-strip" id="healthStripBulkPing">
+            <div class="health-chip">
+              <div class="led led-off"></div>Loading…
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>📣 Bulk Ping (background job)</h2>
+              <span style="font-size:11px;color:var(--text-3);">Uses the server’s bulk ping engine; this UI polls
+                progress.</span>
+            </div>
+            <div class="card-body">
+              <textarea class="url-area" id="bulkPingInput"
+                placeholder="Paste URLs — one per line&#10;&#10;https://example.medium.com/post-1&#10;https://example.medium.com/post-2"></textarea>
+
+              <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;">
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <span style="font-size:12px;color:var(--text-3);">Random delay (ms):</span>
+                  <input class="inspect-input mono" id="bulkPingDelayMin" style="width:120px;" value="3000">
+                  <span style="font-size:12px;color:var(--text-3);">to</span>
+                  <input class="inspect-input mono" id="bulkPingDelayMax" style="width:120px;" value="15000">
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <span style="font-size:12px;color:var(--text-3);">Max / minute:</span>
+                  <input class="inspect-input mono" id="bulkPingPPM" style="width:90px;" value="3">
+                </div>
+                <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:4px;user-select:none;">
+                  <input type="checkbox" id="bulkPingEnableIpRotation" style="transform:translateY(1px);">
+                  <span style="font-size:12px;color:var(--text-2);">Enable IP rotation (Windscribe)</span>
+                  <span style="font-size:11px;color:var(--text-3);">(off by default)</span>
+                </label>
+                <label style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-left:4px;user-select:none;">
+                  <input type="checkbox" id="bulkPingEnableShortLinks" style="transform:translateY(1px);">
+                  <span style="font-size:12px;color:var(--text-2);">Enable ping short links</span>
+                  <span style="font-size:11px;color:var(--text-3);">(runs shorteners + pings the short URLs)</span>
+                </label>
+                <button class="inspect-btn" style="margin-left:auto;" onclick="startBulkPing()" id="btnBulkPingStart">
+                  Start Bulk Ping
+                </button>
+              </div>
+              <div style="margin-top:8px;font-size:11px;color:var(--text-3);">
+                Tip: IP rotation requires Windscribe CLI installed + logged in on the server machine. When disabled,
+                this runs normal bulk pings only.
+              </div>
+
+              <div id="bulkPingMeta" style="margin-top:12px;color:var(--text-3);font-size:12px;display:none;"></div>
+
+              <div id="bulkPingProgress" style="margin-top:12px;display:none;">
+                <div class="summary-grid" id="bulkPingSummary"></div>
+                <div
+                  style="margin-top:12px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:10px 12px;max-height:260px;overflow:auto;">
+                  <div style="font-size:11.5px;font-weight:600;color:var(--text-2);margin-bottom:6px;">Recent results
+                  </div>
+                  <div id="bulkPingLog" style="font-size:11.5px;color:var(--text-2);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END VIEW: Bulk Ping -->
+
+        <!-- ═══ VIEW: Saved Sites ═══ -->
+        <div id="viewSites" class="dashboard-view">
+          <div class="header">
+            <h1>Saved Sites</h1>
+            <p class="sub">Manage your domains and GSC property URLs. Only sites you own (verified in Google Search
+              Console) can be added.</p>
+          </div>
+          <div class="view-health-strip health-strip" id="healthStripSites">
+            <div class="health-chip">
+              <div class="led led-off"></div>Loading…
+            </div>
+          </div>
+          <!-- ═══ SITES (SAVED PROPERTIES) ═══ -->
+          <div class="card">
+            <div class="card-head">
+              <h2>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent-2)" stroke-width="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 8.6 15a1.65 1.65 0 0 0-1.82-.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 15.4 8.6a1.65 1.65 0 0 0 1.82.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 15z" />
+                </svg>
+                Saved Sites (multi-site)
+              </h2>
+              <span style="font-size:11px;color:var(--text-3);">Add only sites you own (verified in GSC). Random or
+                third-party URLs are not allowed.</span>
+            </div>
+            <div class="card-body">
+              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+                <input id="siteDomainInput" class="inspect-input" placeholder="Domain (example.com)"
+                  style="flex:1 1 140px;min-width:140px;">
+                <input id="siteSiteUrlInput" class="inspect-input" placeholder="GSC property URL (https://example.com/)"
+                  style="flex:1 1 180px;min-width:180px;">
+                <input id="siteSitemapUrlInput" class="inspect-input" placeholder="Sitemap URL (optional)"
+                  style="flex:1 1 180px;min-width:180px;">
+                <button class="inspect-btn" type="button" onclick="saveSite()" style="white-space:nowrap;">Save
+                  site</button>
+              </div>
+              <div id="sitesList" style="max-height:400px;overflow:auto;font-size:11.5px;color:var(--text-2);">
+                <div style="color:var(--text-3);">No sites saved yet. Add your domains above.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END VIEW: Sites -->
+
+        <!-- ═══ VIEW: Social Indexing ═══ -->
+        <div id="viewSocials" class="dashboard-view">
+          <div class="header">
+            <h1>Social Indexing</h1>
+            <p class="sub">Create and publish WordPress pages for Medium and social media URLs in bulk.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-head">
+              <h2>📱 Bulk Social Posting</h2>
+              <span style="font-size:11px;color:var(--text-3);">Generates bridging pages on your WordPress site.</span>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom: 15px;">
+                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-2);">Title
+                  Prefix (Fallback for missing titles)</label>
+                <input id="socialTitlePrefix" class="inspect-input" value="Article Overview"
+                  placeholder="e.g. Recommended Reading" style="width:100%;">
+              </div>
+
+              <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:280px;">
+                  <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-2);">URLs
+                    (One per line)</label>
+                  <textarea class="url-area" id="socialUrlInput"
+                    placeholder="https://medium.com/@username/article-title&#10;https://facebook.com/posts/12345" style="min-height:220px;"></textarea>
+                </div>
+                <div style="flex:1; min-width:280px;">
+                  <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-2);">Custom Titles (One per line)</label>
+                  <textarea class="url-area" id="socialTitleInput"
+                    placeholder="Title for URL 1&#10;Title for URL 2&#10;..." style="min-height:220px; background:#fafafa;"></textarea>
+                </div>
+              </div>
+
+              <button class="btn-main" id="btnSocialSubmit" onclick="submitSocials()" style="margin-top:20px;">
+                ⚡ Create & Publish Social Pages
+              </button>
+
+              <div id="socialResults" style="margin-top:20px;display:none;">
+                <h3 style="font-size:13px;font-weight:600;margin-bottom:10px;">Created Pages:</h3>
+                <div id="socialResultList" style="display:flex;flex-direction:column;gap:8px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- END VIEW: Socials -->
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════
+    let API = localStorage.getItem('indexer_api') || 'http://localhost:3100';
+    let urls = [];
+    let lastResults = null;
+    let loadedFileName = '';
+    let cachedSiteUrl = localStorage.getItem('indexer_site_url') || '';
+    let cachedSitemapUrl = localStorage.getItem('indexer_sitemap_url') || '';
+    let savedSites = [];
+    let bulkUrls = [];
+    let bulkResults = [];
+    let bulkPingJobId = null;
+    let bulkPingPollTimer = null;
+
+    // ═══════════════════════════════════════
+    // ROUTER (hash-based)
+    // ═══════════════════════════════════════
+    function getRoute() {
+      const path = (window.location.pathname || "/").replace(/\/+$/, "") || "/";
+      if (path === "/sites") return "sites";
+      if (path === "/socials") return "socials";
+      if (path === "/bulk") return "bulk";
+      if (path === "/bulk-ping") return "bulkPing";
+      if (path === "/inspect") return "inspect";
+      return "index"; // "/", empty, or anything else
+    }
+
+    function renderRoute() {
+      const route = getRoute();
+      document.querySelectorAll(".dashboard-view").forEach((el) => el.classList.remove("active"));
+      document.querySelectorAll(".dashboard-sidebar .nav-link").forEach((el) => el.classList.remove("active"));
+      const viewId =
+        route === "sites" ? "viewSites" :
+          route === "socials" ? "viewSocials" :
+            route === "bulk" ? "viewBulk" :
+              route === "bulkPing" ? "viewBulkPing" :
+                route === "inspect" ? "viewInspect" :
+                  "viewIndex";
+      const navId =
+        route === "sites" ? "navSites" :
+          route === "socials" ? "navSocials" :
+            route === "bulk" ? "navBulk" :
+              route === "bulkPing" ? "navBulkPing" :
+                route === "inspect" ? "navInspect" :
+                  "navIndex";
+      const view = document.getElementById(viewId);
+      const nav = document.getElementById(navId);
+      if (view) view.classList.add("active");
+      if (nav) nav.classList.add("active");
+      const titles = { index: "Submit URLs", inspect: "URL Inspector", bulk: "Bulk Status", bulkPing: "Bulk Ping", sites: "Saved Sites", socials: "Social Indexing" };
+      document.title = `Page Link Indexer v3.1 — ${titles[route] || "Dashboard"}`;
+    }
+
+    window.addEventListener("load", () => {
+      // SPA-style navigation: intercept sidebar clicks so the page doesn't fully reload.
+      document.querySelectorAll(".dashboard-sidebar .nav-link").forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const href = link.getAttribute("href") || "/";
+          if (window.location.pathname !== href) {
+            window.history.pushState({}, "", href);
+            renderRoute();
+          }
+        });
+      });
+      renderRoute();
+    });
+
+    window.addEventListener("popstate", renderRoute);
+
+    // ═══════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════
+    fetchHealth();
+    setupDragDrop();
+    initSiteFields();
+    initBulkPingFields();
+    initBulkInspectFields();
+    loadSites();
+    renderRoute();
+
+    function initBulkPingFields() {
+      const cbRotate = document.getElementById('bulkPingEnableIpRotation');
+      if (cbRotate) {
+        cbRotate.checked = localStorage.getItem('bulk_ping_ip_rotation') === '1';
+        cbRotate.addEventListener('change', () => {
+          localStorage.setItem('bulk_ping_ip_rotation', cbRotate.checked ? '1' : '0');
+        });
+      }
+
+      const cbShort = document.getElementById('bulkPingEnableShortLinks');
+      if (cbShort) {
+        cbShort.checked = localStorage.getItem('bulk_ping_short_links') === '1';
+        cbShort.addEventListener('change', () => {
+          localStorage.setItem('bulk_ping_short_links', cbShort.checked ? '1' : '0');
+        });
+      }
+    }
+
+    function initBulkInspectFields() {
+      const cb = document.getElementById('bulkUseSerpScraper');
+      if (!cb) return;
+      cb.checked = localStorage.getItem('bulk_use_serp_scraper') === '1';
+      const hint = document.getElementById('bulkModeHint');
+      if (hint) {
+        hint.textContent = cb.checked
+          ? 'SERP mode enabled: checks Google via scraping gateway (works for external domains like Medium).'
+          : 'Default mode uses Google Search Console URL Inspection (owned sites only).';
+      }
+      cb.addEventListener('change', () => {
+        localStorage.setItem('bulk_use_serp_scraper', cb.checked ? '1' : '0');
+        const hint2 = document.getElementById('bulkModeHint');
+        if (hint2) {
+          hint2.textContent = cb.checked
+            ? 'SERP mode enabled: checks Google via scraping gateway (works for external domains like Medium).'
+            : 'Default mode uses Google Search Console URL Inspection (owned sites only).';
+        }
+      });
+    }
+
+    function initSiteFields() {
+      const sInput = document.getElementById('siteUrlInput');
+      const smInput = document.getElementById('sitemapUrlInput');
+      if (sInput && cachedSiteUrl) sInput.value = cachedSiteUrl;
+      if (smInput && cachedSitemapUrl) smInput.value = cachedSitemapUrl;
+    }
+
+    function getSiteConfig() {
+      const sInput = document.getElementById('siteUrlInput');
+      const smInput = document.getElementById('sitemapUrlInput');
+      const siteUrl = sInput ? sInput.value.trim() : '';
+      const sitemapUrl = smInput ? smInput.value.trim() : '';
+      return { siteUrl, sitemapUrl };
+    }
+
+    async function loadSites() {
+      try {
+        const res = await fetch(`${API}/api/sites`, { headers: { 'x-api-key': localStorage.getItem('indexer_key') || '' } });
+        const data = await res.json();
+        if (data && data.sites) {
+          savedSites = data.sites;
+          renderSites();
+        }
+      } catch {
+        // ignore, feature is optional
+      }
+    }
+
+    function renderSites() {
+      const container = document.getElementById('sitesList');
+      if (!container) return;
+      if (!savedSites.length) {
+        container.innerHTML = '<div style="color:var(--text-3);">No sites saved yet. Add your domains above.</div>';
+        return;
+      }
+      container.innerHTML = savedSites.map(s => {
+        const siteUrlEsc = (s.siteUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const sitemapEsc = (s.sitemapUrl || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const domainAttr = (s.domain || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+        return `
+    <div class="site-row" style="display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;border:1px solid rgba(148,163,184,.25);margin-bottom:6px;cursor:pointer;"
+         onclick="applySite('${siteUrlEsc}', '${sitemapEsc}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+        <span style="font-weight:500;">${(s.domain || '').replace(/</g, '&lt;')}</span>
+        <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+          <span style="font-size:10px;color:var(--accent-2);">Use</span>
+          <button type="button" class="site-delete-btn" data-domain="${domainAttr}" onclick="event.stopPropagation(); deleteSite(this.getAttribute('data-domain'))" title="Delete site">✕</button>
+        </div>
+      </div>
+      <div style="font-size:10.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(s.siteUrl || '').replace(/</g, '&lt;')}</div>
+      ${s.sitemapUrl ? `<div style="font-size:10.5px;color:var(--text-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(s.sitemapUrl || '').replace(/</g, '&lt;')}</div>` : ''}
+    </div>`;
+      }).join('');
+    }
+
+    function applySite(siteUrl, sitemapUrl) {
+      const sInput = document.getElementById('siteUrlInput');
+      const smInput = document.getElementById('sitemapUrlInput');
+      if (sInput && siteUrl) {
+        sInput.value = siteUrl;
+        cachedSiteUrl = siteUrl;
+        localStorage.setItem('indexer_site_url', siteUrl);
+      }
+      if (smInput && sitemapUrl) {
+        smInput.value = sitemapUrl;
+        cachedSitemapUrl = sitemapUrl;
+        localStorage.setItem('indexer_sitemap_url', sitemapUrl);
+      }
+    }
+
+    async function saveSite() {
+      const dInput = document.getElementById('siteDomainInput');
+      const sInput = document.getElementById('siteSiteUrlInput');
+      const smInput = document.getElementById('siteSitemapUrlInput');
+      const domain = dInput ? dInput.value.trim() : '';
+      const siteUrl = sInput ? sInput.value.trim() : '';
+      const sitemapUrl = smInput ? smInput.value.trim() : '';
+      if (!domain || !siteUrl) {
+        toast('Domain and Site URL are required', 'err');
+        return;
+      }
+      try {
+        const res = await fetch(`${API}/api/sites`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': localStorage.getItem('indexer_key') || '',
+          },
+          body: JSON.stringify({ domain, siteUrl, sitemapUrl }),
+        });
+        const data = await res.json();
+        if (data && data.sites) {
+          savedSites = data.sites;
+          renderSites();
+          toast('Site saved', 'ok');
+        } else if (data && data.error) {
+          toast(data.error, 'err');
+        }
+      } catch (err) {
+        toast('Failed to save site: ' + err.message, 'err');
+      }
+    }
+
+    async function deleteSite(domain) {
+      if (!domain) return;
+      try {
+        const res = await fetch(`${API}/api/sites?domain=${encodeURIComponent(domain)}`, {
+          method: 'DELETE',
+          headers: { 'x-api-key': localStorage.getItem('indexer_key') || '' },
+        });
+        const data = await res.json();
+        if (data && data.sites) {
+          savedSites = data.sites;
+          renderSites();
+          toast('Site removed', 'ok');
+        } else if (data && data.error) {
+          toast(data.error, 'err');
+        }
+      } catch (err) {
+        toast('Failed to delete site: ' + err.message, 'err');
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // TABS
+    // ═══════════════════════════════════════
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      document.getElementById('panelPaste').style.display = tab === 'paste' ? '' : 'none';
+      document.getElementById('panelUpload').style.display = tab === 'upload' ? '' : 'none';
+    }
+
+    // ═══════════════════════════════════════
+    // URL PARSING
+    // ═══════════════════════════════════════
+    function parseUrlsFromText(text) {
+      return text.split(/[\n\r,]+/).map(l => l.trim()).filter(l => {
+        try { return l.startsWith('http') && new URL(l); } catch { return false; }
+      });
+    }
+
+    function parseTextInput() {
+      const text = document.getElementById('urlInput').value;
+      urls = [...new Set(parseUrlsFromText(text))];
+      updateUI();
+    }
+
+    function setUrls(newUrls) {
+      urls = [...new Set(newUrls)];
+      document.getElementById('urlInput').value = urls.join('\n');
+      switchTab('paste');
+      updateUI();
+    }
+
+    // ═══════════════════════════════════════
+    // FILE HANDLING (Excel + CSV)
+    // ═══════════════════════════════════════
+    function handleFileSelect(e) {
+      const file = e.target.files?.[0];
+      if (file) processFile(file);
+      e.target.value = '';
+    }
+
+    function processFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      loadedFileName = file.name;
+
+      if (['csv', 'txt', 'tsv'].includes(ext)) {
+        // Plain text file
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target.result;
+          // Try direct URL extraction
+          let found = parseUrlsFromText(text);
+          if (found.length === 0) {
+            // Try splitting by multiple delimiters (CSV columns)
+            const lines = text.split(/[\n\r]+/).filter(Boolean);
+            for (const line of lines) {
+              const cells = line.split(/[,\t;|]+/);
+              for (const cell of cells) {
+                const v = cell.trim().replace(/^["']|["']$/g, '');
+                if (v.startsWith('http')) {
+                  try { new URL(v); found.push(v); } catch { }
+                }
+              }
+            }
+          }
+          finishFileParse(found);
+        };
+        reader.readAsText(file);
+      } else if (['xlsx', 'xls'].includes(ext)) {
+        // Excel file
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: 'array' });
+            const found = [];
+
+            for (const name of wb.SheetNames) {
+              const sheet = wb.Sheets[name];
+              const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+              for (const row of rows) {
+                for (const cell of row) {
+                  const v = String(cell).trim();
+                  if (v.startsWith('http')) {
+                    try { new URL(v); found.push(v); } catch { }
+                  }
+                }
+              }
+            }
+            finishFileParse(found);
+          } catch (err) {
+            toast('Failed to parse Excel file: ' + err.message, 'err');
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        toast('Unsupported format. Use .xlsx, .csv, or .txt', 'err');
+      }
+    }
+
+    function finishFileParse(found) {
+      const unique = [...new Set(found)];
+      if (unique.length === 0) {
+        toast('No valid URLs found in file. URLs must start with http:// or https://', 'err');
+        return;
+      }
+      setUrls(unique);
+      document.getElementById('fileLoaded').style.display = 'inline-flex';
+      document.getElementById('fileLoaded').innerHTML =
+        `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> ${loadedFileName} — ${unique.length} URLs`;
+      toast(`Loaded ${unique.length} URLs from ${loadedFileName}`, 'ok');
+    }
+
+    // ═══════════════════════════════════════
+    // DRAG & DROP (Global)
+    // ═══════════════════════════════════════
+    function setupDragDrop() {
+      const area = document.getElementById('urlInput');
+      const zone = document.getElementById('uploadZone');
+
+      // Textarea drag-drop
+      area.addEventListener('dragover', (e) => { e.preventDefault(); area.classList.add('drag-active'); });
+      area.addEventListener('dragleave', () => area.classList.remove('drag-active'));
+      area.addEventListener('drop', (e) => {
+        e.preventDefault(); area.classList.remove('drag-active');
+        const file = e.dataTransfer?.files?.[0];
+        if (file) processFile(file);
+      });
+
+      // Upload zone drag-drop
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-active'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-active'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault(); zone.classList.remove('drag-active');
+        const file = e.dataTransfer?.files?.[0];
+        if (file) processFile(file);
+      });
+
+      // Keyboard shortcut
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); submitAll(); }
+      });
+    }
+
+    // ═══════════════════════════════════════
+    // UI UPDATE
+    // ═══════════════════════════════════════
+    function updateUI() {
+      const hasUrls = urls.length > 0;
+      const count = document.getElementById('urlCountNum');
+      const meta = document.getElementById('metaRow');
+      const preview = document.getElementById('urlPreview');
+      const main = document.getElementById('btnMain');
+      const btnExternal = document.getElementById('btnExternal');
+      const btnFeedburner = document.getElementById('btnFeedburner');
+
+      count.textContent = urls.length;
+      meta.style.display = hasUrls ? 'flex' : 'none';
+      main.disabled = !hasUrls;
+      main.innerHTML = hasUrls ? `⚡ Submit to All 9 Services (${urls.length} URLs)` : '⚡ Submit to All 9 Services';
+
+      document.querySelectorAll('.svc-btn').forEach(b => b.disabled = !hasUrls);
+      if (btnExternal) btnExternal.disabled = !hasUrls;
+      if (btnFeedburner) btnFeedburner.disabled = !hasUrls;
+
+      if (loadedFileName) {
+        document.getElementById('fromFile').style.display = '';
+        document.getElementById('fileName').textContent = loadedFileName;
+      }
+
+      // URL preview
+      if (hasUrls) {
+        preview.style.display = '';
+        let html = `<div class="url-preview-head"><span>URL Preview (${urls.length})</span></div>`;
+        urls.forEach((u, i) => {
+          html += `<div class="url-row"><span class="num">${i + 1}</span><span class="link" title="${u}">${u}</span><button class="del" onclick="removeUrl(${i})"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`;
+        });
+        preview.innerHTML = html;
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+
+    function removeUrl(i) {
+      urls.splice(i, 1);
+      document.getElementById('urlInput').value = urls.join('\n');
+      updateUI();
+    }
+
+    function clearAll() {
+      urls = [];
+      loadedFileName = '';
+      document.getElementById('urlInput').value = '';
+      document.getElementById('fileLoaded').style.display = 'none';
+      document.getElementById('fromFile').style.display = 'none';
+      document.getElementById('resultsPanel').style.display = 'none';
+      lastResults = null;
+      updateUI();
+    }
+
+    // ═══════════════════════════════════════
+    // SUBMIT
+    // ═══════════════════════════════════════
+    async function submitAll() { await doSubmit(null); }
+    async function submitTo(services) { await doSubmit(services); }
+
+    async function doSubmit(services) {
+      if (urls.length === 0) return toast('Add URLs first', 'err');
+
+      const btn = document.getElementById('btnMain');
+      const origHTML = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner"></span> Submitting to all services…';
+      btn.classList.add('loading');
+      btn.disabled = true;
+      document.querySelectorAll('.svc-btn').forEach(b => b.disabled = true);
+
+      try {
+        const body = { urls };
+        const cfg = getSiteConfig();
+        if (cfg.siteUrl) {
+          body.siteUrl = cfg.siteUrl;
+          cachedSiteUrl = cfg.siteUrl;
+          localStorage.setItem('indexer_site_url', cfg.siteUrl);
+        }
+        if (cfg.sitemapUrl) {
+          body.sitemapUrl = cfg.sitemapUrl;
+          cachedSitemapUrl = cfg.sitemapUrl;
+          localStorage.setItem('indexer_sitemap_url', cfg.sitemapUrl);
+        }
+        if (services) body.services = services;
+
+        const res = await fetch(`${API}/api/index`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+
+        if (data.success || data.results) {
+          lastResults = data.results;
+          renderResults(data.results);
+          const s = data.results?.summary || {};
+          toast(`${urls.length} URL(s) submitted → ${s.success || 0} success, ${s.accepted || 0} accepted`, 'ok');
+          if (data.results?.skippedMessage) toast(data.results.skippedMessage, 'err');
+        } else {
+          toast(data.error || 'Submission failed', 'err');
+        }
+      } catch (err) {
+        toast(`Connection failed: ${err.message}. Is server running at ${API}?`, 'err');
+      } finally {
+        btn.innerHTML = origHTML;
+        btn.classList.remove('loading');
+        btn.disabled = urls.length === 0;
+        document.getElementById('btnExternal').disabled = urls.length === 0;
+        document.querySelectorAll('.svc-btn').forEach(b => b.disabled = urls.length === 0);
+      }
+    }
+
+    // External-only ping for Medium / social URLs (no owner-only APIs).
+    async function submitExternal() {
+      if (urls.length === 0) return toast('Add URLs first', 'err');
+      const btn = document.getElementById('btnExternal');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner"></span> Pinging external…';
+      btn.classList.add('loading');
+      btn.disabled = true;
+      try {
+        const body = { urls };
+        const res = await fetch(`${API}/api/index/external`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.success) {
+          const svc = data.results?.services || {};
+          const bingArr = Array.isArray(svc.bingUrlPing) ? svc.bingUrlPing : [];
+          const bingOk = bingArr.filter(e => e.status === 'success').length;
+          const bingTotal = bingArr.length;
+          const bingPart = bingTotal ? ` · Bing ping: ${bingOk}/${bingTotal}` : '';
+          toast(`Pings sent for ${urls.length} external URL(s) (WebSub/RSS${bingPart}).`, 'ok');
+        } else {
+          toast(data.error || 'External ping failed', 'err');
+        }
+      } catch (err) {
+        toast(`Connection failed: ${err.message}. Is server running at ${API}?`, 'err');
+      } finally {
+        btn.innerHTML = orig;
+        btn.classList.remove('loading');
+        btn.disabled = urls.length === 0;
+      }
+    }
+
+    // Feedburner ping: each line in the textarea is treated as a feed URL.
+    async function submitFeedburner() {
+      if (urls.length === 0) return toast('Add feed URLs first', 'err');
+      const btn = document.getElementById('btnFeedburner');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<span class="spinner"></span> Pinging Feedburner…';
+      btn.classList.add('loading');
+      btn.disabled = true;
+      try {
+        const body = { urls };
+        const res = await fetch(`${API}/api/index/feedburner`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.success) {
+          const svc = data.results?.services || {};
+          const arr = Array.isArray(svc.feedburnerPing) ? svc.feedburnerPing : [];
+          const ok = arr.filter(e => e.status === 'success').length;
+          const total = arr.length;
+          toast(`Feedburner pings: ${ok}/${total} feeds pinged successfully.`, 'ok');
+        } else {
+          toast(data.error || 'Feedburner ping failed', 'err');
+        }
+      } catch (err) {
+        toast(`Connection failed: ${err.message}. Is server running at ${API}?`, 'err');
+      } finally {
+        btn.innerHTML = orig;
+        btn.classList.remove('loading');
+        btn.disabled = urls.length === 0;
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // RESULTS PANEL
+    // ═══════════════════════════════════════
+    function renderResults(r) {
+      const panel = document.getElementById('resultsPanel');
+      panel.style.display = '';
+
+      // Summary
+      const s = r.summary || {};
+      document.getElementById('summaryGrid').innerHTML = [
+        { label: 'Total', val: s.total || 0, color: 'var(--accent)' },
+        { label: 'Success', val: s.success || 0, color: 'var(--green)' },
+        { label: 'Accepted', val: s.accepted || 0, color: 'var(--amber)' },
+        { label: 'Failed', val: s.failed || 0, color: 'var(--red)' },
+      ].map(c => `<div class="summary-cell"><div class="val" style="color:${c.color}">${c.val}</div><div class="lbl">${c.label}</div></div>`).join('');
+
+      // Per-service
+      let html = '';
+      for (const [name, data] of Object.entries(r.services || {})) {
+        const skip = data?.skipped;
+        const err = data?.error && !Array.isArray(data);
+        const arr = Array.isArray(data);
+        const okCount = arr ? data.filter(e => e.status === 'success' || e.status === 'accepted').length : 0;
+        const total = arr ? data.length : 0;
+        const dotColor = skip ? 'var(--text-3)' : err ? 'var(--red)' : okCount > 0 ? 'var(--green)' : 'var(--amber)';
+        const statColor = skip ? 'var(--text-3)' : err ? 'var(--red)' : 'var(--green)';
+        const statText = skip ? `Skipped · ${data.reason || ''}` : err ? (data.error || '').substring(0, 50) : arr ? `${okCount}/${total}` : '✓ Done';
+        const prettyName = name.replace(/([A-Z])/g, ' $1').replace(/^./, s => s.toUpperCase());
+
+        html += `<div class="svc-result-row"><div class="dot" style="background:${dotColor}"></div><div class="name">${prettyName}</div><div class="stat" style="color:${statColor}">${statText}</div></div>`;
+      }
+      document.getElementById('svcResults').innerHTML = html;
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function copyResults() {
+      if (!lastResults) return;
+      navigator.clipboard.writeText(JSON.stringify(lastResults, null, 2));
+      toast('Results copied to clipboard', 'ok');
+    }
+
+    // ═══════════════════════════════════════
+    // INSPECTOR
+    // ═══════════════════════════════════════
+    async function doInspect() {
+      const url = document.getElementById('inspectInput').value.trim();
+      if (!url) return;
+      const btn = document.getElementById('btnInspect');
+      btn.innerHTML = '<span class="spinner spinner-light" style="width:13px;height:13px;"></span> …';
+
+      try {
+        const res = await fetch(`${API}/api/inspect`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, siteUrl: getSiteConfig().siteUrl }),
+        });
+        const data = await res.json();
+        const r = data.result || data;
+        const el = document.getElementById('inspectResult');
+
+        if (r.error) {
+          el.innerHTML = `<div style="margin-top:10px;padding:12px;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.12);border-radius:10px;color:var(--red);font-size:12.5px;">⚠ ${r.error}</div>`;
+        } else {
+          const vc = v => v === 'PASS' || v === 'ALLOWED' ? 'var(--green)' : v === 'FAIL' ? 'var(--red)' : 'var(--amber)';
+          el.innerHTML = `<div class="inspect-result">
+        ${[
+              { l: 'Verdict', v: r.verdict, c: vc(r.verdict) },
+              { l: 'Coverage', v: r.coverageState },
+              { l: 'Indexing', v: r.indexingState },
+              { l: 'Robots.txt', v: r.robotsTxtState, c: vc(r.robotsTxtState) },
+              { l: 'Page Fetch', v: r.pageFetchState },
+              { l: 'Last Crawl', v: r.lastCrawlTime ? new Date(r.lastCrawlTime).toLocaleDateString() : 'N/A' },
+            ].map(i => `<div class="ir-cell"><span class="ir-lbl">${i.l}</span><span class="ir-val" style="color:${i.c || 'var(--text)'}">${i.v}</span></div>`).join('')}
+      </div>`;
+        }
+      } catch (err) {
+        document.getElementById('inspectResult').innerHTML = `<div style="margin-top:10px;color:var(--red);font-size:12.5px;">Connection error: ${err.message}</div>`;
+      } finally {
+        btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Inspect`;
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // QUICK ACTIONS
+    // ═══════════════════════════════════════
+    async function quickAction(endpoint, msg) {
+      try {
+        const cfg = getSiteConfig();
+        const payload = { urls: [] };
+        if (cfg.siteUrl) payload.siteUrl = cfg.siteUrl;
+        if (cfg.sitemapUrl) payload.sitemapUrl = cfg.sitemapUrl;
+        await fetch(`${API}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        toast(msg, 'ok');
+      } catch (err) { toast(`Failed: ${err.message}`, 'err'); }
+    }
+
+    // ═══════════════════════════════════════
+    // BULK URL STATUS
+    // ═══════════════════════════════════════
+    function handleBulkFile(e) {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      e.target.value = '';
+      const ext = file.name.split('.').pop().toLowerCase();
+      const onLoaded = (textOrData, isExcel) => {
+        const values = [];
+        if (isExcel && typeof XLSX !== 'undefined') {
+          const wb = XLSX.read(textOrData, { type: 'array' });
+          wb.SheetNames.forEach(name => {
+            const sheet = wb.Sheets[name];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            rows.forEach(row => {
+              row.forEach(cell => {
+                const v = String(cell).trim();
+                if (/^https?:\/\//i.test(v)) values.push(v);
+              });
+            });
+          });
+        } else {
+          const text = String(textOrData);
+          const lines = text.split(/[\r\n]+/);
+          lines.forEach(line => {
+            const parts = line.split(/[,\t;| ]+/);
+            parts.forEach(p => {
+              const v = p.trim().replace(/^["']|["']$/g, '');
+              if (/^https?:\/\//i.test(v)) values.push(v);
+            });
+          });
+        }
+        const unique = [...new Set(values)];
+        bulkUrls = unique;
+        const countEl = document.getElementById('bulkCount');
+        if (countEl) countEl.textContent = `${bulkUrls.length} URL(s) detected from ${file.name}`;
+        const bulkResEl = document.getElementById('bulkResults');
+        if (bulkResEl) bulkResEl.innerHTML = '';
+        const bulkActEl = document.getElementById('bulkActions');
+        if (bulkActEl) bulkActEl.style.display = 'none';
+        toast(`Loaded ${bulkUrls.length} URL(s) for bulk check`, 'ok');
+      };
+      if (ext === 'xlsx' || ext === 'xls') {
+        const reader = new FileReader();
+        reader.onload = (ev) => onLoaded(ev.target.result, true);
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = (ev) => onLoaded(ev.target.value || ev.target.result, false);
+        reader.readAsText(file);
+      }
+    }
+
+    async function runBulkInspect() {
+      if (!bulkUrls.length) {
+        toast('Upload a file with URLs first', 'err');
+        return;
+      }
+      const cbSerp = document.getElementById('bulkUseSerpScraper');
+      const useSerp = !!(cbSerp && cbSerp.checked);
+      localStorage.setItem('bulk_use_serp_scraper', useSerp ? '1' : '0');
+
+      const cfg = getSiteConfig();
+      if (!useSerp && !cfg.siteUrl && (!savedSites || !savedSites.length)) {
+        toast('Either set a Site URL or save your sites in the "Saved Sites" card before running bulk check.', 'err');
+        return;
+      }
+      const btn = document.getElementById('btnBulkInspect');
+      const original = btn ? btn.innerHTML : '';
+      if (btn) { btn.innerHTML = '<span class="spinner spinner-light" style="width:14px;height:14px;"></span> Checking…'; btn.disabled = true; }
+      try {
+        const payload = { urls: bulkUrls };
+        if (!useSerp && cfg.siteUrl) payload.siteUrl = cfg.siteUrl;
+        const endpoint = useSerp ? '/api/inspect/bulk-serp' : '/api/inspect/bulk';
+        const res = await fetch(`${API}${endpoint}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Bulk inspect failed');
+        bulkResults = data.results || [];
+        renderBulkResults();
+        const bulkActEl = document.getElementById('bulkActions');
+        if (bulkActEl) bulkActEl.style.display = bulkResults.length ? 'flex' : 'none';
+        toast(`Checked ${bulkResults.length} URL(s)`, 'ok');
+      } catch (err) {
+        console.error(err);
+        toast('Bulk inspect error: ' + err.message, 'err');
+      } finally {
+        if (btn) { btn.innerHTML = original; btn.disabled = false; }
+      }
+    }
+
+    function renderBulkResults() {
+      const container = document.getElementById('bulkResults');
+      if (!container) return;
+      if (!bulkResults.length) {
+        container.innerHTML = '<div style="color:var(--text-3);">No results yet.</div>';
+        return;
+      }
+      const borderVal = 'rgba(148,163,184,.15)';
+      const gridCols = '2fr minmax(90px,1fr) minmax(220px,1.4fr) minmax(160px,1fr) minmax(140px,1fr) minmax(180px,1fr)';
+      const head = `
+    <div style="display:grid;grid-template-columns:${gridCols};gap:10px;font-weight:600;border-bottom:1px solid ${borderVal};padding-bottom:6px;margin-bottom:6px;">
+      <div>URL</div>
+      <div>Verdict</div>
+      <div style="padding-right:12px;">Indexing</div>
+      <div>Coverage</div>
+      <div>Last crawl</div>
+      <div>Robots / Fetch</div>
+    </div>`;
+      const rows = bulkResults.map(r => {
+        const last = r.lastCrawlTime ? new Date(r.lastCrawlTime).toLocaleString() : '—';
+        const verdictColor = r.verdict === 'PASS' ? 'var(--green)' : r.verdict === 'ERROR' ? 'var(--red)' : 'var(--text-3)';
+        return `
+    <div style="display:grid;grid-template-columns:${gridCols};gap:10px;padding:4px 0;border-bottom:1px solid ${borderVal};">
+      <div title="${(r.url || '').replace(/"/g, '&quot;')}" style="overflow:hidden;text-overflow:ellipsis;">${(r.url || '').replace(/</g, '&lt;')}</div>
+      <div style="color:${verdictColor}">${(r.verdict || '—').replace(/</g, '&lt;')}</div>
+      <div style="padding-right:12px;overflow:hidden;text-overflow:ellipsis;" title="${(r.indexingState || '').replace(/"/g, '&quot;')}">${(r.indexingState || '—').replace(/</g, '&lt;')}</div>
+      <div style="overflow:hidden;text-overflow:ellipsis;" title="${(r.coverageState || '').replace(/"/g, '&quot;')}">${(r.coverageState || '—').replace(/</g, '&lt;')}</div>
+      <div>${last}</div>
+      <div style="font-size:10.5px;">${(r.robotsTxtState || '—').replace(/</g, '&lt;')} / ${(r.pageFetchState || '—').replace(/</g, '&lt;')}</div>
+    </div>`;
+      }).join('');
+      container.innerHTML = head + rows;
+    }
+
+    function downloadBulk(format) {
+      if (!bulkResults.length) {
+        toast('No bulk results to export', 'err');
+        return;
+      }
+      const rows = bulkResults.map(r => ({
+        URL: r.url,
+        Verdict: r.verdict,
+        Indexing: r.indexingState,
+        Coverage: r.coverageState,
+        'Last crawl': r.lastCrawlTime ? new Date(r.lastCrawlTime).toISOString() : '',
+        Robots: r.robotsTxtState,
+        'Page fetch': r.pageFetchState,
+      }));
+      if (format === 'csv') {
+        const head = Object.keys(rows[0]).join(',');
+        const body = rows.map(r => Object.values(r).map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+        const blob = new Blob([head + '\n' + body], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'bulk-inspect-results.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast('CSV downloaded', 'ok');
+      } else {
+        if (typeof XLSX === 'undefined') { toast('SheetJS not loaded', 'err'); return; }
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Results');
+        XLSX.writeFile(wb, 'bulk-inspect-results.xlsx');
+        toast('Excel downloaded', 'ok');
+      }
+    }
+
+    function copyFailedBulkUrls() {
+      if (!bulkResults.length) {
+        toast('No bulk results to filter', 'err');
+        return;
+      }
+      const failed = bulkResults.filter(r => (r.verdict || '').toUpperCase() !== 'PASS');
+      if (!failed.length) {
+        toast('No failed/neutral URLs to copy', 'ok');
+        return;
+      }
+      const text = failed.map(r => r.url).filter(Boolean).join('\n');
+      if (!text) {
+        toast('No URLs found in failed rows', 'err');
+        return;
+      }
+      navigator.clipboard.writeText(text)
+        .then(() => toast(`Copied ${failed.length} URL(s)`, 'ok'))
+        .catch(err => toast('Could not copy to clipboard: ' + err.message, 'err'));
+    }
+
+    // ═══════════════════════════════════════
+    // SERVICE HEALTH
+    // ═══════════════════════════════════════
+    async function fetchHealth() {
+      const strips = document.querySelectorAll('.view-health-strip');
+      const offlineHtml = '<div class="health-chip"><div class="led led-off"></div>Server offline — start with: npm start</div>';
+      try {
+        const r = await fetch(`${API}/api/service-health`);
+        const data = await r.json();
+        const content = Object.values(data).map(svc => {
+          const cls = svc.status === 'operational' ? 'led-on' : svc.status === 'rate_limited' ? 'led-warn' : 'led-off';
+          return `<div class="health-chip"><div class="led ${cls}"></div>${svc.name}</div>`;
+        }).join('');
+        strips.forEach(el => { el.innerHTML = content; });
+      } catch {
+        strips.forEach(el => { el.innerHTML = offlineHtml; });
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // API CONFIG
+    // ═══════════════════════════════════════
+    function changeApi() {
+      const newApi = prompt('Enter your indexer server URL:', API);
+      if (newApi && newApi !== API) {
+        API = newApi.replace(/\/$/, '');
+        localStorage.setItem('indexer_api', API);
+        document.getElementById('apiUrl').textContent = API;
+        fetchHealth();
+        toast('API endpoint updated', 'ok');
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════
+    function toast(msg, type) {
+      const box = document.getElementById('toastBox');
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.innerHTML = type === 'ok'
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${msg}`
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> ${msg}`;
+      box.appendChild(el);
+      setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateX(20px)'; setTimeout(() => el.remove(), 300); }, 4000);
+    }
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // ═══════════════════════════════════════
+    // BULK PING (External)
+    // ═══════════════════════════════════════
+
+    function readNum(id, fallback) {
+      const el = document.getElementById(id);
+      if (!el) return fallback;
+      const n = Number(String(el.value || '').trim());
+      return Number.isFinite(n) ? n : fallback;
+    }
+
+    async function startBulkPing() {
+      const inputEl = document.getElementById('bulkPingInput');
+      const btn = document.getElementById('btnBulkPingStart');
+      const meta = document.getElementById('bulkPingMeta');
+      const progressWrap = document.getElementById('bulkPingProgress');
+      const logEl = document.getElementById('bulkPingLog');
+      const summaryEl = document.getElementById('bulkPingSummary');
+      const cbRotate = document.getElementById('bulkPingEnableIpRotation');
+      const cbShort = document.getElementById('bulkPingEnableShortLinks');
+
+      const text = inputEl ? inputEl.value : '';
+      const list = [...new Set(parseUrlsFromText(text))];
+      if (!list.length) return toast('Paste at least one valid URL', 'err');
+
+      const delayMinMs = readNum('bulkPingDelayMin', 3000);
+      const delayMaxMs = readNum('bulkPingDelayMax', 15000);
+      const ppm = readNum('bulkPingPPM', 3);
+      const enableIpRotation = !!(cbRotate && cbRotate.checked);
+      const enablePingShortLinks = !!(cbShort && cbShort.checked);
+      localStorage.setItem('bulk_ping_ip_rotation', enableIpRotation ? '1' : '0');
+      localStorage.setItem('bulk_ping_short_links', enablePingShortLinks ? '1' : '0');
+
+      if (bulkPingPollTimer) { clearInterval(bulkPingPollTimer); bulkPingPollTimer = null; }
+      bulkPingJobId = null;
+
+      if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner spinner-light" style="width:14px;height:14px;"></span> Starting…'; }
+      if (meta) {
+        meta.style.display = '';
+        const tags = [
+          enableIpRotation ? 'IP rotation enabled' : null,
+          enablePingShortLinks ? 'short links enabled' : null,
+        ].filter(Boolean);
+        meta.textContent = `Starting job for ${list.length} URL(s)…${tags.length ? ` (${tags.join(' · ')})` : ''}`;
+      }
+      if (progressWrap) progressWrap.style.display = 'none';
+      if (logEl) logEl.innerHTML = '';
+      if (summaryEl) summaryEl.innerHTML = '';
+
+      try {
+        const res = await fetch(`${API}/api/bulk-ping/start`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': localStorage.getItem('indexer_key') || '',
+          },
+          body: JSON.stringify({
+            urls: list,
+            options: {
+              delayMinMs,
+              delayMaxMs,
+              maxPingsPerMinute: ppm,
+              enableIpRotation,
+              enablePingShortLinks,
+            }
+          }),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Start failed');
+
+        bulkPingJobId = data.jobId;
+        toast('Bulk ping started', 'ok');
+        if (meta) meta.textContent = `Job started: ${bulkPingJobId} (${data.urlCount} URL(s))`;
+
+        await pollBulkPingStatus(true);
+        bulkPingPollTimer = setInterval(() => pollBulkPingStatus(false), 2000);
+      } catch (e) {
+        toast('Bulk ping error: ' + (e.message || 'Request failed'), 'err');
+        if (meta) meta.textContent = '';
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Start Bulk Ping'; }
+      }
+    }
+
+    async function pollBulkPingStatus(forceToast) {
+      if (!bulkPingJobId) return;
+      const meta = document.getElementById('bulkPingMeta');
+      const progressWrap = document.getElementById('bulkPingProgress');
+      const logEl = document.getElementById('bulkPingLog');
+      const summaryEl = document.getElementById('bulkPingSummary');
+
+      try {
+        const res = await fetch(`${API}/api/bulk-ping/status/${encodeURIComponent(bulkPingJobId)}`, {
+          headers: { 'x-api-key': localStorage.getItem('indexer_key') || '' }
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.error || 'Status failed');
+
+        const job = data.job;
+        const p = job.progress || { attempted: 0, success: 0, failed: 0 };
+
+        if (meta) {
+          meta.style.display = '';
+          meta.textContent = `Status: ${job.status} · attempted ${p.attempted}/${job.urlCount} · ok ${p.success} · fail ${p.failed}`;
+        }
+
+        if (progressWrap) progressWrap.style.display = '';
+        if (summaryEl) {
+          summaryEl.innerHTML = [
+            { label: 'Total URLs', val: job.urlCount || 0, color: 'var(--accent)' },
+            { label: 'Attempted', val: p.attempted || 0, color: 'var(--accent-2)' },
+            { label: 'Success', val: p.success || 0, color: 'var(--green)' },
+            { label: 'Failed', val: p.failed || 0, color: 'var(--red)' },
+          ].map(c => `<div class="summary-cell"><div class="val" style="color:${c.color}">${c.val}</div><div class="lbl">${c.label}</div></div>`).join('');
+        }
+
+        if (logEl) {
+          const rows = (job.results || []).slice(-60).reverse();
+          logEl.innerHTML = rows.map(r => {
+            const color = r.success ? 'var(--green)' : 'var(--red)';
+            const sc = r.status != null ? ` ${r.status}` : '';
+            const ep = r.endpoint ? ` → ${r.endpoint}` : '';
+            const err = r.success ? '' : ` · ${(r.error || 'fail').substring(0, 80)}`;
+            return `<div style="padding:4px 0;border-bottom:1px solid rgba(148,163,184,.15);">
+          <span class="mono" style="color:${color};font-weight:600;">${r.success ? 'OK' : 'FAIL'}${sc}</span>
+          <span class="mono" style="color:var(--text);"> ${escapeHtml(r.url || '')}</span>
+          <span style="color:var(--text-3);">${escapeHtml(ep)}${escapeHtml(err)}</span>
+        </div>`;
+          }).join('') || '<div style="color:var(--text-3);">No results yet…</div>';
+        }
+
+        if (job.status === 'completed' || job.status === 'failed') {
+          if (bulkPingPollTimer) { clearInterval(bulkPingPollTimer); bulkPingPollTimer = null; }
+          if (job.status === 'completed') toast('Bulk ping completed', 'ok');
+          else toast('Bulk ping failed: ' + (job.lastError || 'Unknown error'), 'err');
+        }
+      } catch (e) {
+        if (forceToast) toast('Could not fetch bulk ping status: ' + (e.message || 'error'), 'err');
+      }
+    }
+
+    // ═══════════════════════════════════════
+    // SOCIAL INDEXING
+    // ═══════════════════════════════════════
+
+    async function submitSocials() {
+      const urlInput = document.getElementById('socialUrlInput');
+      const titleInput = document.getElementById('socialTitleInput');
+      const prefixInput = document.getElementById('socialTitlePrefix');
+      const btn = document.getElementById('btnSocialSubmit');
+      const resultsDiv = document.getElementById('socialResults');
+      const resultList = document.getElementById('socialResultList');
+
+      // Parse URLs (handle standard newlines)
+      const rawUrls = urlInput.value.split(/\r?\n/).map(u => u.trim()).filter(Boolean);
+      if (!rawUrls.length) return toast('Please enter at least one URL', 'err');
+
+      // Parse titles (keep empty lines to maintain index mapping)
+      const rawTitles = titleInput ? titleInput.value.split(/\r?\n/) : [];
+      
+      // Remove trailing empty lines only
+      while (rawTitles.length > 0 && !rawTitles[rawTitles.length - 1].trim()) {
+        rawTitles.pop();
+      }
+      
+      console.log(`[Socials] Validating: ${rawUrls.length} URLs vs ${rawTitles.length} Titles`);
+
+      // Validation: Check if counts mismatch significantly (if titles are provided)
+      const nonEmptyTitles = rawTitles.filter(t => t.trim()).length;
+      if (nonEmptyTitles > 0) {
+        // Strict check: if the count of lines (after stripping trailing empty) differs at all, BLOCK.
+        if (rawUrls.length !== rawTitles.length) {
+           const msg = `Mismatch: You provided ${rawUrls.length} URLs but ${rawTitles.length} Titles. \nPlease provide exactly one title per URL line, or leave the Titles box completely empty to auto-generate.`;
+           alert(msg); // Alert is more visible than toast for blocking errors
+           btn.disabled = false;
+           btn.innerHTML = '⚡ Create & Publish Social Pages';
+           return;
+        }
+      }
+
+      // Construct items
+      const items = rawUrls.map((url, i) => {
+        return {
+          url: url,
+          title: (rawTitles[i] || '').trim() || null
+        };
+      });
+
+      const titlePrefix = prefixInput.value.trim() || 'Article';
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner spinner-light"></span> Creating pages...';
+
+      try {
+        const res = await fetch(`${API}/api/socials`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-api-key': localStorage.getItem('indexer_key') || ''
+          },
+          body: JSON.stringify({ items, titlePrefix })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          const sCount = data.success ? data.success.length : 0;
+          const fCount = data.failed ? data.failed.length : 0;
+          toast(`Processed: ${sCount} success, ${fCount} failed`, sCount > 0 ? 'ok' : 'err');
+          resultsDiv.style.display = 'block';
+
+          let html = '';
+          data.success.forEach(item => {
+            html += `
+          <div style="padding:10px;border:1px solid var(--border);border-radius:8px;background:#f8fafc;margin-bottom:8px;">
+            <div style="font-size:11px;color:var(--text-3);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Original: ${item.url}</div>
+            <div style="font-weight:600;font-size:13px;display:flex;justify-content:space-between;align-items:center;">
+              <a href="${item.wpUrl}" target="_blank" style="color:var(--accent);text-decoration:none;">View Published Page</a>
+              <span style="font-size:10px;background:rgba(51,190,135,0.1);color:var(--green);padding:2px 6px;border-radius:4px;">ID: ${item.wpId}</span>
+            </div>
+          </div>
+        `;
+          });
+
+          if (data.failed && data.failed.length) {
+            data.failed.forEach(item => {
+              html += `
+            <div style="padding:10px;border:1px solid var(--red);border-radius:8px;background:rgba(220,38,38,0.05);margin-bottom:8px;">
+              <div style="font-size:11px;color:var(--red);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Failed: ${item.url}</div>
+              <div style="font-size:12px;color:var(--text-2);">${item.error}</div>
+            </div>
+          `;
+            });
+          }
+
+          resultList.innerHTML = html;
+        } else {
+          toast(data.error || 'Failed to process social URLs', 'err');
+        }
+      } catch (err) {
+        toast(`Connection failed: ${err.message}`, 'err');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '⚡ Create & Publish Social Pages';
+      }
+    }
+  </script>
+</body>
+
+</html>

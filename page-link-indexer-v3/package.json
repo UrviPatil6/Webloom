@@ -1,0 +1,42 @@
+{
+  "name": "page-link-indexer",
+  "version": "3.1.0",
+  "description": "Sub-1-hour URL indexing — 9 strategies (2026 + YouTube): Google, IndexNow, Bing, WebSub, RSS, Yandex, Sitemap, Recent Sitemap, YouTube",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "cli": "node src/cli.js",
+    "submit": "node src/cli.js",
+    "stats": "node src/cli.js --stats"
+  },
+  "bin": {
+    "indexer": "src/cli.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "express-rate-limit": "^7.4.0",
+    "googleapis": "^144.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^6.21.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "seo",
+    "indexing",
+    "google",
+    "indexnow",
+    "bing",
+    "yandex",
+    "websub",
+    "pubsubhubbub",
+    "sitemap",
+    "search-engine"
+  ],
+  "license": "MIT"
+}

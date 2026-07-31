@@ -1,0 +1,19 @@
+{
+  "name": "page-generator",
+  "version": "1.0.0",
+  "description": "Multi-page generator with AI content and WordPress publishing",
+  "main": "server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend && npm run dev",
+    "client": "cd frontend && npm start",
+    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install"
+  },
+  "keywords": ["page-generator", "wordpress", "openai", "mern"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
+

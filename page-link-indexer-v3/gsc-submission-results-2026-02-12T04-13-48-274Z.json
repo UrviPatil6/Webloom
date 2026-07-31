@@ -1,0 +1,22 @@
+[
+  {
+    "url": "https://aiagentsforloanbrokers.medium.com/ai-agents-for-loan-brokers-d1319c460547",
+    "status": "failed",
+    "error": "Cannot read properties of undefined (reading 'index')"
+  },
+  {
+    "url": "https://aiagentsforhospitals.medium.com/ai-agents-for-hospitals-3cda458ce95d",
+    "status": "failed",
+    "error": "Cannot read properties of undefined (reading 'index')"
+  },
+  {
+    "url": "https://aiagentsforbanking.medium.com/ai-agents-for-banking-890e178085d5",
+    "status": "failed",
+    "error": "Cannot read properties of undefined (reading 'index')"
+  },
+  {
+    "url": "https://aiagentsforequipment.medium.com/ai-agents-for-equipment-5e6d34dce805",
+    "status": "failed",
+    "error": "Cannot read properties of undefined (reading 'index')"
+  }
+]
